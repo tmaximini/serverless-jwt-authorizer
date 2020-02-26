@@ -1,0 +1,63 @@
+org: tmaximini
+
+custom:
+  secrets: ${file(secrets.json)}
+  tableName: users-table-test
+
+service: serverless-jwt-authorizer
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-central-1
+  environment:
+    JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+      Resource: "arn:aws:dynamodb:eu-central-1::table/${self:custom.tableName}"
+functions:
+  verify-token:
+    handler: functions/authorize.verifyToken
+
+  me:
+    handler: functions/users.me
+    events:
+      - http:
+          path: me
+          method: get
+          cors: true
+          authorizer:
+            name: verify-token # execute this before !
+            identitySource: method.request.header.Authorization
+            resultTtlInSeconds: 3600
+  login:
+    handler: functions/users.signIn
+    events:
+      - http:
+          path: login
+          method: post
+          cors: true
+  register:
+    handler: functions/users.registerUser
+    events:
+      - http:
+          path: register
+          method: post
+          cors: true
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
