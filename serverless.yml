@@ -2,7 +2,7 @@ org: tmaximini
 
 custom:
   secrets: ${file(secrets.json)}
-  tableName: users-table-test
+  tableName: "test-users-table"
 
 service: serverless-jwt-authorizer
 provider:
@@ -11,18 +11,19 @@ provider:
   region: eu-central-1
   environment:
     JWT_SECRET: ${self:custom.secrets.JWT_SECRET}
+    AWS_ID: ${self:custom.secrets.AWS_ID}
   iamRoleStatements:
     - Effect: "Allow"
       Action:
         - "dynamodb:GetItem"
         - "dynamodb:PutItem"
-      Resource: "arn:aws:dynamodb:eu-central-1::table/${self:custom.tableName}"
+      Resource: "arn:aws:dynamodb:eu-central-1:${self:custom.secrets.AWS_ID}:table/${self:custom.tableName}"
 functions:
   verify-token:
     handler: functions/authorize.verifyToken
 
   me:
-    handler: functions/users.me
+    handler: functions/user.me
     events:
       - http:
           path: me
@@ -33,14 +34,14 @@ functions:
             identitySource: method.request.header.Authorization
             resultTtlInSeconds: 3600
   login:
-    handler: functions/users.signIn
+    handler: functions/user.signIn
     events:
       - http:
           path: login
           method: post
           cors: true
   register:
-    handler: functions/users.registerUser
+    handler: functions/user.registerUser
     events:
       - http:
           path: register
@@ -53,11 +54,15 @@ resources:
       Properties:
         TableName: ${self:custom.tableName}
         AttributeDefinitions:
-          - AttributeName: email
+          - AttributeName: pk
+            AttributeType: S
+          - AttributeName: sk
             AttributeType: S
         KeySchema:
-          - AttributeName: email
+          - AttributeName: pk
             KeyType: HASH
+          - AttributeName: sk
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
