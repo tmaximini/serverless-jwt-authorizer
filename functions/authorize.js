@@ -23,8 +23,6 @@ function generatePolicyDocument(effect, methodArn) {
     ]
   };
 
-  console.info({ policyDocument });
-
   return policyDocument;
 }
 

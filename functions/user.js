@@ -60,7 +60,8 @@ const me = async event => {
  */
 async function signToken(user) {
   const secret = Buffer.from(process.env.JWT_SECRET, "base64");
-  return jwt.sign({ id: user.id, roles: ["USER"] }, secret, {
+
+  return jwt.sign({ email: user.email, id: user.id, roles: ["USER"] }, secret, {
     expiresIn: 86400 // expires in 24 hours
   });
 }
