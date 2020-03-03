@@ -30,21 +30,16 @@ module.exports.verifyToken = (event, context, callback) => {
   const token = event.authorizationToken.replace("Bearer ", "");
   const methodArn = event.methodArn;
 
-  console.log(event, context);
-
-  console.log({ methodArn });
-
   if (!token || !methodArn) return callback(null, "Unauthorized");
 
   const secret = Buffer.from(process.env.JWT_SECRET, "base64");
 
   // verifies token
   const decoded = jwt.verify(token, secret);
-  console.info({ decoded });
 
   if (decoded && decoded.id) {
-    return callback(null, generateAuthResponse("me", "Allow", methodArn));
+    return callback(null, generateAuthResponse(decoded.id, "Allow", methodArn));
   } else {
-    return callback(null, generateAuthResponse("me", "Deny", methodArn));
+    return callback(null, generateAuthResponse(decoded.id, "Deny", methodArn));
   }
 };
