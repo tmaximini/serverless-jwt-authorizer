@@ -26,7 +26,7 @@ function generatePolicyDocument(effect, methodArn) {
   return policyDocument;
 }
 
-module.exports.verifyToken = (event, context, callback) => {
+module.exports.handler = function verifyToken(event, context, callback) {
   const token = event.authorizationToken.replace("Bearer ", "");
   const methodArn = event.methodArn;
 

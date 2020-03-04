@@ -20,28 +20,28 @@ provider:
       Resource: "arn:aws:dynamodb:eu-central-1:${self:custom.secrets.AWS_ID}:table/${self:custom.tableName}"
 functions:
   verify-token:
-    handler: functions/authorize.verifyToken
+    handler: functions/authorize.handler
 
   me:
-    handler: functions/user.me
+    handler: functions/me.handler
     events:
       - http:
           path: me
           method: get
           cors: true
           authorizer:
-            name: verify-token # execute this before !
+            name: verify-token
             identitySource: method.request.header.Authorization
             resultTtlInSeconds: 3600
   login:
-    handler: functions/user.signIn
+    handler: functions/login.handler
     events:
       - http:
           path: login
           method: post
           cors: true
   register:
-    handler: functions/user.registerUser
+    handler: functions/register.handler
     events:
       - http:
           path: register
